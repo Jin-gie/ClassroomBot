@@ -44,4 +44,4 @@ async def newclasse(ctx, class_name):
 
 
 
-bot.run("NzQ2MjczMjU1MzI5MTAzOTY5.Xz97IQ.8mpKvRSmLIkziPbtFAq01ndX6dE")
+bot.run("*") # Le token du bot a été remplacé par *
