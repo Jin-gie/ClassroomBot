@@ -13,11 +13,10 @@ async def creation(ctx, guild, class_name):
     #   - serveur
     #   - nom de la classe (paramètre de commande entré par l'utilisateur)
     ###
-    role = await guild.create_role(name=class_name, permissions=eleve_perm, hoist=True, mentionable=True)
 
-    ###
-    # Crée la catégorie et les channels du nom de la classe
-    ###
+    role = await guild.create_role(name=class_name, permissions=eleve_perm, hoist=True, mentionable=True)
+    # hoist = True : le rôle apparaîtra séparé dans la liste des membres
+
     category = await guild.create_category(class_name)
     print("Catégorie créée")
 
@@ -36,18 +35,51 @@ async def creation(ctx, guild, class_name):
     ###
     await category.set_permissions(guild.default_role, view_channel=False)
     await category.set_permissions(role, view_channel=True)
-    await documents_channel.set_permissions(role, view_channel=True, send_messages = False, send_tts_messages = False, attach_files = False)
+    await documents_channel.set_permissions(
+        role, view_channel=True,
+        send_messages=False,
+        send_tts_messages=False,
+        attach_files=False)
 
     await ctx.send(f"La classe {class_name} a été créée")
 
 
+async def changement(ctx, old_classe, new_classe):
+    # ## Si les classes existent, enlever le role de old_classe à tous les élèves concernés, et leur ajouter le role
+    # de new_classe
+    # Entrées :
+    #   - contexte
+    #   - nom de l'ancienne classe du groupe
+    #   - nom de la nouvelle classe du groupe
+    ###
+    guild = ctx.guild
+
+    if get(guild.roles, name=old_classe) and get(guild.roles, name=new_classe):
+        old_role = get(guild.roles, name=old_classe)
+        new_role = get(guild.roles, name=new_classe)
+
+        for member in guild.members:
+            if old_role in member.roles:
+                await member.remove_roles(old_role, atomic=True)
+                await member.add_roles(new_role, atomic=True)
+        await ctx.send("Les rôles ont été changés")
+
+
 async def suppression(ctx, class_name):
+    ###
+    # Si la catégorie à supprimer existe, alors supprime les channels, la catégorie et le rôle associé
+    # Entrées :
+    #   - contexte
+    #   - nom de la classe (paramètre de commande entré par l'utilisateur)
+    ###
+
     guild = ctx.guild
     author_commande = ctx.message.author
 
     if get(guild.categories, name=class_name): # Le nom de la classe existe et a été trouvé
-        category = get(guild.categories, name=class_name)
-        role = get(guild.roles, name=class_name)
+        category = get(guild.categories, name=class_name) # récupère la catégorie
+        role = get(guild.roles, name=class_name) # récupère le rôle associé
+
         # 1. Vérifier que l'utilisateur veut bien supprimer cette classe
         #ctx.send(f"Êtes-vous sûr.e de vouloir supprimer la classe {class_name} ? Cette action est irréversible !")
 
